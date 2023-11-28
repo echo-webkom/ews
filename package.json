@@ -1,0 +1,11 @@
+{
+  "name": "@echo-webkom/cron",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "deno run --unstable --watch -A main.ts"
+  },
+  "dependencies": {
+    "@echo-webkom/db": "npm:workspace:*"
+  }
+}
