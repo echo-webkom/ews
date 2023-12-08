@@ -1,0 +1,5 @@
+{
+    "tasks": {
+        "cron:dev": "deno run -A --unstable --watch cron/main.ts"
+    }
+}
