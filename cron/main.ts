@@ -1,4 +1,8 @@
-import { handleDeleteSensitiveQuestions, handleResetYear } from "./handlers.ts";
+import {
+  handleDeleteSensitiveQuestions,
+  handleResetYear,
+  handleCheckForNewFeedbacks,
+} from "./handlers.ts";
 
 /**
  * Runs at 00:00 on the 1st of January and July
@@ -18,3 +22,8 @@ Deno.cron(
  * Runs at 00:00 on the 1st of July
  */
 Deno.cron("reset user year", "0 0 1 7 *", handleResetYear);
+
+/**
+ * Runs every day at 17:00
+ */
+Deno.cron("check for new feedbacks", "0 17 * * *", handleCheckForNewFeedbacks);
