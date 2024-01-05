@@ -59,9 +59,9 @@ export const handleCheckForNewFeedbacks = async () => {
       created_at > NOW() - INTERVAL '1 day';
   `;
 
-  if (result.count > 0) {
-    console.log(`Found ${result.count} new feedbacks`);
+  console.log(`Found ${result.count} new feedbacks`);
 
+  if (result.count > 0) {
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
     if (!RESEND_API_KEY) {
@@ -76,12 +76,10 @@ export const handleCheckForNewFeedbacks = async () => {
       },
       body: JSON.stringify({
         from: "echo <ikkesvar@echo-webkom.no>",
-        to: ["me@omfj.no"],
-        subject: `Det har kommet ${result.count} nye tilbakemeldinger på echo-webkom.no`,
-        html: "<p>Det har kommet nye tilbakemeldinger på echo-webkom.no</p>",
+        to: ["me@omfj.no", "n.d.engh@gmail.com", "KjetilAlvestad@gmail.com"],
+        subject: `${result.count} ny(e) tilbakemeldinger på echo.uib.no`,
+        html: `<p>Det har kommet ${result.count} ny(e) tilbakemelding(er) på <a href="https://echo.uib.no">echo.uib.no</a>. Les de(n) <a href="https://echo.uib.no/admin/tilbakemeldinger">her</a>.</p>`,
       }),
     });
-  } else {
-    console.log("Found no new feedbacks");
   }
 };
