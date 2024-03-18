@@ -26,6 +26,15 @@ export const handleDeleteOldStrikes = async () => {
   console.log(`Deleted ${result.length} old strikes`);
 };
 
+export const handleUnbanUsers = async () => {
+  await fetch("https://echo.uib.no/api/unban", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${Deno.env.get("ADMIN_KEY")}`,
+    },
+  });
+};
+
 export const handleResetYear = async () => {
   const result = await db
     .updateTable("user")

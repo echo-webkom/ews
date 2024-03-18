@@ -2,6 +2,8 @@ import {
   handleDeleteSensitiveQuestions,
   handleResetYear,
   handleCheckForNewFeedbacks,
+  handleUnbanUsers,
+  handleDeleteOldStrikes,
 } from "./handlers.ts";
 
 /**
@@ -16,12 +18,17 @@ Deno.cron(
 /**
  * Runs at 00:00 on the 1st of January and July
  */
-// Deno.cron("delete old strikes", "0 0 1 1,7 *", handleDeleteOldStrikes);
+Deno.cron("delete old strikes", "0 0 1 1,7 *", handleDeleteOldStrikes);
 
 /**
  * Runs at 00:00 on the 1st of July
  */
 Deno.cron("reset user year", "0 0 1 7 *", handleResetYear);
+
+/**
+ * Runs every day at 02:00
+ */
+Deno.cron("unban users", "0 2 * * *", handleUnbanUsers);
 
 /**
  * Runs every day at 17:00
