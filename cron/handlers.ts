@@ -1,67 +1,50 @@
-import sql from "../lib/pg.ts";
+import { db } from "../lib/db.ts";
+import { sql } from "npm:kysely";
 
 export const handleDeleteSensitiveQuestions = async () => {
-  const result = await sql`
-  DELETE FROM
-    answer
-  WHERE question_id IN (
-      SELECT
-        q.id
-      FROM
-        question q
-      JOIN
-        happening h ON q.happening_id = h.id
-      WHERE
-        h.date < NOW() - INTERVAL '30 days'
-      AND
-        q.is_sensitive = true
-  )`;
-  console.log(`Deleted ${result.count} sensitive questions`);
+  const result = await db
+    .deleteFrom("answer")
+    .where(
+      "question_id",
+      "in",
+      db
+        .selectFrom("question")
+        .leftJoin("happening", "happening_id", "id")
+        .where("date", "<", sql<Date>`NOW() - INTERVAL '30 days'`)
+        .where("is_sensitive", "=", true)
+        .select("id")
+    )
+    .execute();
+  console.log(`Deleted ${result.length} sensitive questions`);
 };
 
 export const handleDeleteOldStrikes = async () => {
-  const result = await sql`
-  DELETE FROM
-    strike_info
-  WHERE
-    created_at < NOW() - INTERVAL '1 year'
-  `;
-  console.log(`Deleted ${result.count} old strikes`);
+  const result = await db
+    .deleteFrom("strike_info")
+    .where("created_at", "<", sql<Date>`NOW() - INTERVAL '1 year'`)
+    .execute();
+  console.log(`Deleted ${result.length} old strikes`);
 };
 
 export const handleResetYear = async () => {
-  const result = await sql`
-    UPDATE
-      "user"
-    SET
-      year = null
-  `;
-  console.log(`Reset ${result.count} users' years`);
+  const result = await db
+    .updateTable("user")
+    .set("year", null)
+    .returning("id")
+    .execute();
+  console.log(`Reset ${result.length} users' years`);
 };
 
-interface Feedback {
-  id: string;
-  name: string | null;
-  email: string | null;
-  message: string;
-  category: string;
-  is_read: boolean;
-  created_at: Date;
-}
-
 export const handleCheckForNewFeedbacks = async () => {
-  const result = await sql<Array<Feedback>>`
-    SELECT
-      id
-    FROM
-      site_feedback
-    WHERE
-      created_at > NOW() - INTERVAL '1 day';
-  `;
+  const result = await db
+    .selectFrom("site_feedback")
+    .where("created_at", ">", sql<Date>`NOW() - INTERVAL '1 day'`)
+    .execute();
+  const numberOfNewFeedbacks = result.length;
 
-  console.log(`Found ${result.count} new feedbacks`);
+  console.log(`Found ${numberOfNewFeedbacks} new feedbacks`);
 
-  if (result.count > 0) {
+  if (numberOfNewFeedbacks > 0) {
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
     if (!RESEND_API_KEY) {
@@ -77,8 +60,8 @@ export const handleCheckForNewFeedbacks = async () => {
       body: JSON.stringify({
         from: "echo <ikkesvar@echo-webkom.no>",
         to: ["me@omfj.no", "n.d.engh@gmail.com", "KjetilAlvestad@gmail.com"],
-        subject: `${result.count} ny(e) tilbakemeldinger på echo.uib.no`,
-        html: `<p>Det har kommet ${result.count} ny(e) tilbakemelding(er) på <a href="https://echo.uib.no">echo.uib.no</a>. Les de(n) <a href="https://echo.uib.no/admin/tilbakemeldinger">her</a>.</p>`,
+        subject: `${numberOfNewFeedbacks} ny(e) tilbakemeldinger på echo.uib.no`,
+        html: `<p>Det har kommet ${numberOfNewFeedbacks} ny(e) tilbakemelding(er) på <a href="https://echo.uib.no">echo.uib.no</a>. Les de(n) <a href="https://echo.uib.no/admin/tilbakemeldinger">her</a>.</p>`,
       }),
     });
   }
