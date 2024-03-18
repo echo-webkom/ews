@@ -1,8 +1,10 @@
 import { loadEnv } from "./env.ts";
 import { Kysely, PostgresDialect } from "npm:kysely";
 // @deno-types="npm:@types/pg"
-import { Pool } from "npm:pg";
+import pg from "npm:pg";
 import { DB } from "./database-types.ts";
+
+const { Pool } = pg;
 
 await loadEnv();
 
