@@ -1,5 +1,6 @@
 import { db } from "../lib/db.ts";
 import { sql } from "npm:kysely";
+import { sendEmail } from "../lib/email.ts";
 
 export const handleDeleteSensitiveQuestions = async () => {
   const result = await db
@@ -45,33 +46,34 @@ export const handleResetYear = async () => {
 };
 
 export const handleCheckForNewFeedbacks = async () => {
-  const result = await db
+  const feedbacks = await db
     .selectFrom("site_feedback")
+    .selectAll()
     .where("created_at", ">", sql<Date>`NOW() - INTERVAL '1 day'`)
     .execute();
-  const numberOfNewFeedbacks = result.length;
 
-  console.log(`Found ${numberOfNewFeedbacks} new feedbacks`);
+  console.log(`Found ${feedbacks.length} new feedbacks`);
 
-  if (numberOfNewFeedbacks > 0) {
-    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+  if (feedbacks.length > 0) {
+    const to = ["me@omfj.no", "n.d.engh@gmail.com", "KjetilAlvestad@gmail.com"];
+    const subject = `${feedbacks.length} ny(e) tilbakemeldinger på echo.uib.no`;
 
-    if (!RESEND_API_KEY) {
-      throw new Error("Missing RESEND_API_KEY");
-    }
+    const body = [
+      `<p>Det har kommet ${feedbacks.length} ny(e) tilbakemelding(er) på <a href="https://echo.uib.no">echo.uib.no</a>. Les de(n) <a href="https://echo.uib.no/admin/tilbakemeldinger">her</a>.</p>`,
+      '<ul style="padding-top: 2rem;">',
+      ...feedbacks.map(
+        (feedback) => `<li>
+      <div>
+        <p><strong>${feedback.name ?? "Ukjent"}</strong> (${
+          feedback.email ?? "Ingen e-post"
+        })</p>
+        <p>${feedback.message}</p>
+      </div>
+      </li>`
+      ),
+      "</ul>",
+    ].join("");
 
-    await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: "echo <ikkesvar@echo-webkom.no>",
-        to: ["me@omfj.no", "n.d.engh@gmail.com", "KjetilAlvestad@gmail.com"],
-        subject: `${numberOfNewFeedbacks} ny(e) tilbakemeldinger på echo.uib.no`,
-        html: `<p>Det har kommet ${numberOfNewFeedbacks} ny(e) tilbakemelding(er) på <a href="https://echo.uib.no">echo.uib.no</a>. Les de(n) <a href="https://echo.uib.no/admin/tilbakemeldinger">her</a>.</p>`,
-      }),
-    });
+    await sendEmail(to, subject, body);
   }
 };
