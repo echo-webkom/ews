@@ -50,6 +50,7 @@ export const handleCheckForNewFeedbacks = async () => {
     .selectFrom("site_feedback")
     .selectAll()
     .where("created_at", ">", sql<Date>`NOW() - INTERVAL '1 day'`)
+    .where("is_read", "=", false)
     .execute();
 
   console.log(`Found ${feedbacks.length} new feedbacks`);
