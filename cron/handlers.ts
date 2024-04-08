@@ -28,12 +28,14 @@ export const handleDeleteOldStrikes = async () => {
 };
 
 export const handleUnbanUsers = async () => {
-  await fetch("https://echo.uib.no/api/unban", {
+  const response = await fetch("https://echo.uib.no/api/unban", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${Deno.env.get("ADMIN_KEY")}`,
     },
   });
+
+  console.log("Ping to /api/unban:", response.status);
 };
 
 export const handleResetYear = async () => {
