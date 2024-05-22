@@ -1,5 +1,7 @@
 # echo Web services
 
+> Code moved to [echo Nano](https://github.com/echo-webkom/nano).
+
 Smaller isolated tasks related to [echo.uib.no](https://echo.uib.no).
 
 ## CRON
